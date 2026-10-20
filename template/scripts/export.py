@@ -181,12 +181,14 @@ def write_usage(dest, project, style, assets):
     for asset in assets:
         if not asset["frames"] or len(asset["frames"]) < 2:
             continue
+        cell = asset["size"].get("cell")
+        cell_text = f"{cell}×{cell}" if cell else f"{asset['size']['width']}×{asset['size']['height']}"
         lines += [
             f"### {asset['name']}（{asset['id']}）",
             "",
             f"- 帧顺序：{', '.join(str(f) for f in asset['frames'])}",
             f"- 精灵表：`{asset['atlas']}`",
-            f"- 图集坐标：`{asset['atlasMeta']}`（单元格 {asset['size'].get('cell') or [asset['size']['width'], asset['size']['height']]}，{asset['size']['columns']} 列）",
+            f"- 图集坐标：`{asset['atlasMeta']}`（单元格 {cell_text}，{asset['size']['columns']} 列）",
             "",
         ]
     for asset in assets:
