@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32">
+  <g shape-rendering="crispEdges">
+    <!-- 外轮廓（八边形硬币） -->
+    <rect x="10" y="4" width="12" height="4" fill="#1A1C2C"/>
+    <rect x="6" y="8" width="20" height="16" fill="#1A1C2C"/>
+    <rect x="10" y="24" width="12" height="4" fill="#1A1C2C"/>
+    <!-- 金色主体 -->
+    <rect x="10" y="6" width="12" height="20" fill="#FFCD75"/>
+    <rect x="7" y="10" width="18" height="12" fill="#FFCD75"/>
+    <!-- 高光 -->
+    <rect x="9" y="8" width="5" height="6" fill="#F4F4F4"/>
+    <rect x="8" y="11" width="3" height="4" fill="#FFFFFF"/>
+    <!-- 阴影 -->
+    <rect x="20" y="18" width="4" height="6" fill="#EF7D57"/>
+    <!-- 铸印 -->
+    <rect x="14" y="12" width="4" height="8" fill="#5D275D"/>
+    <rect x="13" y="14" width="6" height="4" fill="#5D275D"/>
+  </g>
+</svg>

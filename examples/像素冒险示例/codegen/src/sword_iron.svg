@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32">
+  <g shape-rendering="crispEdges">
+    <!-- 剑尖 -->
+    <rect x="15" y="1" width="2" height="3" fill="#1A1C2C"/>
+    <!-- 剑身描边 -->
+    <rect x="13" y="4" width="6" height="17" fill="#1A1C2C"/>
+    <!-- 剑身 -->
+    <rect x="14" y="5" width="4" height="15" fill="#94B0C2"/>
+    <rect x="14" y="5" width="1" height="15" fill="#F4F4F4"/>
+    <rect x="17" y="5" width="1" height="15" fill="#566C86"/>
+    <!-- 护手 -->
+    <rect x="9" y="21" width="14" height="4" fill="#1A1C2C"/>
+    <rect x="10" y="22" width="12" height="2" fill="#EF7D57"/>
+    <rect x="10" y="22" width="12" height="1" fill="#FFCD75"/>
+    <!-- 握柄 -->
+    <rect x="14" y="25" width="4" height="5" fill="#5D275D"/>
+    <rect x="14" y="25" width="1" height="5" fill="#B13E53"/>
+    <!-- 剑首 -->
+    <rect x="12" y="29" width="8" height="2" fill="#1A1C2C"/>
+    <rect x="13" y="29" width="6" height="1" fill="#FFCD75"/>
+  </g>
+</svg>

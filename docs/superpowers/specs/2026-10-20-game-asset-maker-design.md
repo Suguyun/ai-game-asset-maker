@@ -155,7 +155,8 @@ ai-game-asset-maker/
 
 - `sizes` 按素材类型覆盖 `library/presets/sizes.json`。
 - 素材项里的 `size` 可引用预设名或直接写对象，再覆盖任意字段。
-- 尺寸对象支持：`width`、`height`、`cell`、`scales`、`padding`、`trim`、`anchor`、`transparent`、`columns`、`gap`、`frames`、`seamless`、`nineSlice`。
+- 尺寸对象支持：`width`、`height`、`cell`、`scales`、`padding`、`trim`、`anchor`、`transparent`、`removeBg`、`columns`、`gap`、`frames`、`seamless`、`nineSlice`。
+- `removeBg` 默认对角色/图标/UI/特效开启，对背景/平铺关闭（整块纹理的纯色填充是内容，不是背景）。
 
 ### 6.3 `assets.yaml`
 
@@ -197,7 +198,7 @@ assets:
 
 | 步骤 | 规则 |
 |---|---|
-| 去底 | 有 alpha 直接用；无 alpha 按四角采样纯色 key 去底并做边缘 despill；失败标记待人工 |
+| 去底 | 有 alpha 直接用；对象类素材无 alpha 时按四角采样纯色 key 去底并做边缘 despill；背景/平铺默认不去底；失败标记待人工 |
 | 裁切/补边 | trim 透明边 → 按 `anchor`（默认 center，角色可设 bottom-center）补到目标画布 → `padding` |
 | 缩放 | 像素风 nearest，其余 lanczos；按 `scales` 生成多倍图 |
 | 调色锁定 | `paletteLock` 开启时量化到 Style Card 色板，报告平均色差 |
@@ -210,7 +211,8 @@ assets:
 
 - 文件齐全、命名合法、无缺失帧。
 - 每档尺寸正确、透明通道存在、透明边距均匀。
-- 图标主体占画布 70%~85%。
+- 图标主体包围盒较长边占画布 70%~95%，且不进入安全边距。
+- 背景/平铺的不透明像素占比 ≥ 30%（防止被误抠空）。
 - 角色各帧同画布、脚底基线一致。
 - 精灵表行列、帧数、单元格尺寸正确。
 - 像素风无抗锯齿半透明、颜色数不超色板。

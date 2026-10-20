@@ -1,0 +1,15 @@
+{
+  "name": "像素冒险示例",
+  "style": "style.json",
+  "sizes": {},
+  "output": {
+    "format": "png",
+    "engine": "generic"
+  },
+  "defaults": {
+    "mode": "code-draw",
+    "padding": 8,
+    "trim": true,
+    "anchor": "center"
+  }
+}

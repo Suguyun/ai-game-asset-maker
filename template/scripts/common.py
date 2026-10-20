@@ -184,6 +184,8 @@ def resolve_size(asset, project, presets, frame_count=1, style=None):
     merged.setdefault("transparent", True)
     merged.setdefault("gap", 0)
     merged.setdefault("seamless", False)
+    # 整块纹理（背景/平铺）的纯色填充是内容，不是背景，默认不去底
+    merged.setdefault("removeBg", typ not in ("background", "tile"))
     pixel_grid = int((style or {}).get("pixelGrid", 0) or 0)
     merged["pixel"] = bool(merged.get("pixel") or pixel_grid > 0)
     merged["pixelGrid"] = pixel_grid
