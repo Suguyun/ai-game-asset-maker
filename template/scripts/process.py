@@ -183,7 +183,7 @@ def process_asset(root, project, style, asset, presets):
     for frame in frames:
         raw = find_raw(root, size, frame)
         if not raw:
-            raise FileNotFoundError(f"{asset['id']}：缺原始图 {common.raw_path(root, size, frame)}")
+            raise FileNotFoundError(f"缺原始图 {common.raw_path(root, size, frame)}")
         original = Image.open(raw).convert("RGBA")
         im = original
 

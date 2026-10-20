@@ -84,7 +84,7 @@ def render_asset(root, project, style, asset, presets, scale_override=None, forc
         src = find_source(root, asset["id"], frame)
         if not src:
             raise RuntimeError(
-                f"{asset['id']}：找不到绘制源文件。请在 "
+                f"找不到绘制源文件。请在 "
                 f"codegen/src/{asset['id']}.svg 或 .html（多帧用 {asset['id']}__<frame>.svg）"
             )
         dst = common.raw_path(root, size, frame)

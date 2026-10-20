@@ -25,6 +25,14 @@ class ProcessTest(unittest.TestCase):
         out = process.remove_solid_bg(im)
         self.assertEqual(out.getpixel((0, 0)), (255, 255, 255, 0))
 
+    def test_remove_solid_bg_leaves_complex_background(self):
+        im = Image.new("RGBA", (10, 10), (255, 255, 255, 255))
+        for y in range(10):
+            for x in range(10):
+                im.putpixel((x, y), (x * 20, y * 20, 128, 255))
+        out = process.remove_solid_bg(im)
+        self.assertEqual(out.getpixel((0, 0))[3], 255)
+
     def test_trim_alpha(self):
         im = solid(10, 10, (0, 0, 0, 0))
         im.paste((255, 0, 0, 255), (3, 4, 6, 7))
@@ -43,6 +51,13 @@ class ProcessTest(unittest.TestCase):
         out = process.fit_canvas(im, 8, 8, 0, "center", nearest=True, cover=True)
         self.assertEqual(out.size, (8, 8))
         self.assertEqual(out.getpixel((0, 0))[3], 255)
+
+    def test_fit_canvas_bottom_center(self):
+        im = solid(4, 2, (255, 0, 0, 255))
+        out = process.fit_canvas(im, 8, 8, 1, "bottom-center", nearest=True)
+        self.assertEqual(out.getpixel((4, 6))[3], 255)
+        self.assertEqual(out.getpixel((4, 3))[3], 0)
+        self.assertEqual(out.getpixel((4, 7))[3], 0)
 
     def test_quantize_to_palette(self):
         im = Image.new("RGBA", (2, 1), (250, 10, 10, 255))

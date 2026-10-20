@@ -135,10 +135,12 @@ def prompt_text(root, asset, size, style):
     for frame in frames:
         rel = common.raw_path(root, size, frame).relative_to(common.project_root(root))
         lines.append(f"- `{rel}`")
-    biggest = size["width"] * max(size["scales"])
+    biggest = max(size["scales"])
+    biggest_w = int(size.get("cell") or size["width"]) * biggest
+    biggest_h = int(size.get("cell") or size["height"]) * biggest
     lines += [
         "",
-        f"> 建议直接生成 {biggest}px 宽的高分辨率图，脚本会负责裁切、补边和缩小；"
+        f"> 建议直接生成 {biggest_w}×{biggest_h}px 的高分辨率图，脚本会负责裁切、补边和缩小；"
         "如果工具只能出固定尺寸，按目标尺寸生成即可。",
         "",
         "## 风格块",

@@ -1,0 +1,14 @@
+# 工程中间产物
+out/*
+!out/.gitkeep
+raw/*
+!raw/.gitkeep
+prompts/*
+!prompts/.gitkeep
+
+# Python
+__pycache__/
+*.pyc
+
+# 系统
+.DS_Store

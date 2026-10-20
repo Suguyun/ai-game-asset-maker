@@ -22,7 +22,8 @@ def default_dest(root, project):
     root = common.project_root(root)
     if root.name == "工程":
         return root.parent
-    return root.parent / "outputs" / project.get("name", "游戏素材")
+    safe_name = str(project.get("name") or "游戏素材").replace("/", "_").replace("\\", "_")
+    return root.parent / "outputs" / safe_name
 
 
 def export(root=None, dest=None, copy_to=None):

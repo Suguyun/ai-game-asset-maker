@@ -9,10 +9,13 @@ import hashlib
 import json
 import math
 import os
+import re
 from pathlib import Path
 
 VALID_TYPES = ("character", "sprite", "icon", "background", "tile", "ui", "vfx")
 VALID_MODES = ("ai-image", "code-draw")
+ID_RE = re.compile(r"^[a-z][a-z0-9_]*$")
+FRAME_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_.-]*$")
 
 BUILTIN_PRESETS = {
     "icon": {"width": 256, "height": 256, "scales": [1, 2], "padding": 8, "trim": True, "anchor": "center", "transparent": True},
@@ -99,8 +102,19 @@ def load_assets(project, root=None):
     if not isinstance(assets, list) or not assets:
         raise ConfigError(f"素材清单为空或格式不对：{path}")
     for asset in assets:
+        if not isinstance(asset, dict):
+            raise ConfigError(f"素材项格式不对：{asset!r}")
+        asset_id = asset.get("id")
+        if not isinstance(asset_id, str) or not ID_RE.match(asset_id):
+            raise ConfigError(f"素材 id 不合法（需小写蛇形，不能含路径分隔符）：{asset_id!r}")
+        frames = asset.get("frames") or []
+        if isinstance(frames, str):
+            frames = [frames]
+        for frame in frames:
+            if not isinstance(frame, str) or not FRAME_RE.match(frame) or ".." in frame:
+                raise ConfigError(f"素材 {asset_id} 的帧名不合法：{frame!r}")
         asset.setdefault("mode", project.get("defaults", {}).get("mode", "ai-image"))
-        asset.setdefault("frames", [])
+        asset.setdefault("frames", frames)
     return assets
 
 
