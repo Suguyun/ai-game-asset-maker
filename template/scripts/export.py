@@ -34,6 +34,7 @@ def export(root=None, dest=None, copy_to=None):
     presets = common.load_presets(project, root_path)
     dest = Path(dest).expanduser().resolve() if dest else default_dest(root_path, project)
     dest = dest.resolve()
+    common.ensure_dir(dest)
 
     warnings = []
     manifest_assets = []
