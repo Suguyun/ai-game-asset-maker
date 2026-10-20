@@ -113,8 +113,8 @@ def load_assets(project, root=None):
         for frame in frames:
             if not isinstance(frame, str) or not FRAME_RE.match(frame) or ".." in frame:
                 raise ConfigError(f"素材 {asset_id} 的帧名不合法：{frame!r}")
+        asset["frames"] = frames
         asset.setdefault("mode", project.get("defaults", {}).get("mode", "ai-image"))
-        asset.setdefault("frames", frames)
     return assets
 
 

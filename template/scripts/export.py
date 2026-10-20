@@ -88,7 +88,7 @@ def export(root=None, dest=None, copy_to=None):
                 "nineSlice": size.get("nineSlice"),
             },
             "scales": size["scales"],
-            "frames": frames,
+            "frames": [f for f in frames if f],
             "files": files,
             "atlas": str(atlas_rel) if atlas_rel else None,
             "atlasMeta": str(atlas_meta_rel) if atlas_meta_rel else None,
