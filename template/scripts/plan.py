@@ -91,12 +91,13 @@ def build_matrix(project, style, assets, presets, root):
             warnings.append(f"{asset_id}：缺原始图 {len(missing_raw)} 张")
         if asset.get("mode") == "code-draw":
             src_dir = common.project_root(root) / "codegen" / "src"
-            names = [f"{asset_id}{ext}" for ext in (".svg", ".html")]
-            names += [f"{asset_id}__{frame}{ext}" for frame in frames if frame for ext in (".svg", ".html")]
+            names = [f"{asset_id}{ext}" for ext in (".svg", ".html", ".py")]
+            names += [f"{asset_id}__{frame}{ext}" for frame in frames if frame for ext in (".svg", ".html", ".py")]
+            names += ["generate_sprites.py", "generate_assets.py"]
             if not any((src_dir / name).exists() for name in names):
                 warnings.append(
                     f"{asset_id}：code-draw 源文件不存在"
-                    f"（先写 codegen/src/{asset_id}.svg/.html，多帧可用 {asset_id}__<frame>.svg）"
+                    f"（写 codegen/src/{asset_id}.svg/.html，或提供 codegen/src/generate_sprites.py）"
                 )
 
         rows.append({

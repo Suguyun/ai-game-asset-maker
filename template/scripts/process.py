@@ -233,7 +233,16 @@ def process_asset(root, project, style, asset, presets):
             "type": size["type"],
             "frame_names": [f for f in frames if f],
             "source_frame_size": [body_w, body_h],
+            "anchor": [body_w // 2, body_h - 1] if size.get("anchor") == "bottom-center"
+            else ([body_w // 2, 0] if size.get("anchor") == "top-center" else [body_w // 2, body_h // 2]),
         })
+        animations = asset.get("animations")
+        if animations:
+            meta["row_order"] = list(animations.keys())
+            meta["animations"] = [
+                {"row": row, "animation": name, "frames": int(count)}
+                for row, (name, count) in enumerate(animations.items())
+            ]
         meta_path = out_dir / f"{asset['id']}.json"
         meta_path.write_text(json.dumps(meta, ensure_ascii=False, indent=2), encoding="utf-8")
         report["atlas"] = {

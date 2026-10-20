@@ -124,6 +124,8 @@ def export(root=None, dest=None, copy_to=None, force=False, skip_check=False, al
             "name": size["name"],
             "type": size["type"],
             "mode": size["mode"],
+            "frame_size": [int(size.get("cell") or size["width"]), int(size.get("cell") or size["height"])],
+            "sheet_size": [int(size["width"]), int(size["height"])],
             "size": {
                 "width": size["width"],
                 "height": size["height"],
@@ -138,6 +140,7 @@ def export(root=None, dest=None, copy_to=None, force=False, skip_check=False, al
             },
             "scales": size["scales"],
             "frames": [f for f in frames if f],
+            "animations": asset.get("animations") or None,
             "files": files,
             "atlas": str(atlas_rel) if atlas_rel else None,
             "atlasMeta": str(atlas_meta_rel) if atlas_meta_rel else None,
@@ -157,21 +160,36 @@ def export(root=None, dest=None, copy_to=None, force=False, skip_check=False, al
     (dest / "manifest.json").write_text(json.dumps(manifest, ensure_ascii=False, indent=2), encoding="utf-8")
 
     preview = dest / "预览"
-    if (root_path / "out" / "sheet.jpg").exists():
+    sheet_path = root_path / "out" / "sheet.jpg"
+    previews_dir = root_path / "out" / "previews"
+    has_preview = False
+    if sheet_path.exists():
         common.ensure_dir(preview)
-        shutil.copy2(root_path / "out" / "sheet.jpg", preview / "联系表.jpg")
-    else:
-        warnings.append("缺 out/sheet.jpg，先跑 sheet.py")
+        shutil.copy2(sheet_path, preview / "联系表.jpg")
+        has_preview = True
     sheets_dir = root_path / "out" / "sheets"
     if sheets_dir.exists():
         common.ensure_dir(preview / "分类")
         for sheet in sorted(sheets_dir.glob("*.jpg")):
             shutil.copy2(sheet, preview / "分类" / sheet.name)
+            has_preview = True
+    if previews_dir.exists():
+        preview_files = sorted(previews_dir.glob("*.png"))
+        if preview_files:
+            common.ensure_dir(preview / "角色方向")
+            for item in preview_files:
+                shutil.copy2(item, preview / "角色方向" / item.name)
+            has_preview = True
+    if not has_preview:
+        warnings.append("缺预览图，先跑 sheet.py 或 make_preview.py")
 
-    for confirm in (root_path / "需求确认.md", root_path.parent / "需求确认.md"):
-        if confirm.exists():
-            shutil.copy2(confirm, dest / "需求确认.md")
-            break
+    for doc_name in ("需求确认.md", "设计说明.md"):
+        for base in (root_path, root_path.parent):
+            source = base / doc_name
+            target = dest / doc_name
+            if source.exists() and source.resolve() != target.resolve():
+                shutil.copy2(source, target)
+                break
 
     write_asset_list(dest, project, style, asset_rows)
     write_usage(dest, project, style, manifest_assets)
@@ -230,14 +248,22 @@ def write_usage(dest, project, style, assets):
             continue
         cell = asset["size"].get("cell")
         cell_text = f"{cell}×{cell}" if cell else f"{asset['size']['width']}×{asset['size']['height']}"
+        animations = asset.get("animations")
+        if animations:
+            frame_line = f"- 帧命名：`<动画>_<序号>`（序号从 0 起），共 {len(asset['frames'])} 帧"
+        else:
+            frame_line = f"- 帧顺序：{', '.join(str(f) for f in asset['frames'])}"
         lines += [
             f"### {asset['name']}（{asset['id']}）",
             "",
-            f"- 帧顺序：{', '.join(str(f) for f in asset['frames'])}",
+            frame_line,
             f"- 精灵表：`{asset['atlas']}`",
             f"- 图集坐标：`{asset['atlasMeta']}`（单元格 {cell_text}，{asset['size']['columns']} 列）",
-            "",
         ]
+        if animations:
+            rows = [f"{row} {name}({count} 帧)" for row, (name, count) in enumerate(animations.items())]
+            lines.append(f"- 行顺序：{' / '.join(rows)}")
+        lines.append("")
     for asset in assets:
         nine = asset["size"].get("nineSlice")
         if nine:
