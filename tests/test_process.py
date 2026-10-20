@@ -25,6 +25,14 @@ class ProcessTest(unittest.TestCase):
         out = process.remove_solid_bg(im)
         self.assertEqual(out.getpixel((0, 0)), (255, 255, 255, 0))
 
+    def test_remove_solid_bg_ignores_stray_semi_transparent_pixel(self):
+        im = solid(10, 10, (255, 255, 255, 255))
+        im.putpixel((0, 0), (255, 255, 255, 200))
+        im.putpixel((5, 5), (255, 0, 0, 255))
+        out = process.remove_solid_bg(im)
+        self.assertEqual(out.getpixel((9, 9))[3], 0)
+        self.assertEqual(out.getpixel((5, 5))[3], 255)
+
     def test_remove_solid_bg_leaves_complex_background(self):
         im = Image.new("RGBA", (10, 10), (255, 255, 255, 255))
         for y in range(10):
@@ -51,6 +59,20 @@ class ProcessTest(unittest.TestCase):
         out = process.fit_canvas(im, 8, 8, 0, "center", nearest=True, cover=True)
         self.assertEqual(out.size, (8, 8))
         self.assertEqual(out.getpixel((0, 0))[3], 255)
+
+    def test_fit_canvas_cover_ignores_padding(self):
+        im = solid(4, 2, (255, 0, 0, 255))
+        out = process.fit_canvas(im, 8, 8, 2, "center", nearest=True, cover=True)
+        self.assertEqual(out.getpixel((0, 0))[3], 255)
+        self.assertEqual(out.getpixel((7, 7))[3], 255)
+
+    def test_harden_alpha(self):
+        im = Image.new("RGBA", (3, 1))
+        im.putpixel((0, 0), (255, 0, 0, 0))
+        im.putpixel((1, 0), (255, 0, 0, 128))
+        im.putpixel((2, 0), (255, 0, 0, 255))
+        out = process.harden_alpha(im)
+        self.assertEqual([out.getpixel((x, 0))[3] for x in range(3)], [0, 255, 255])
 
     def test_fit_canvas_bottom_center(self):
         im = solid(4, 2, (255, 0, 0, 255))

@@ -126,7 +126,7 @@ python3 scripts/export.py --dest /tmp/demo/交付
 }
 ```
 
-按素材类型覆盖任意尺寸字段，优先级见 `references/尺寸与图集.md`。
+按素材类型覆盖任意尺寸字段，优先级见 `references/尺寸与图集.md`。第一版只支持 `format: "png"`（需要透明通道），其他格式会报配置错误。
 
 ### `assets.yaml`：素材清单
 
@@ -208,7 +208,7 @@ python3 scripts/render.py --id potion_red --force
 outputs/<中文项目名>/
 ├── assets/{character,icon,background,tile,ui,vfx,sprite}/
 ├── assets/atlas/          # 精灵表 + 坐标 JSON
-├── assets/manifest.json   # 机器可读清单
+├── manifest.json          # 机器可读清单（交付目录根部）
 ├── 需求确认.md
 ├── 素材清单.md
 ├── 设计说明.md
@@ -234,7 +234,7 @@ outputs/<中文项目名>/
 支持。对象类素材输出 RGBA PNG；无 alpha 的原始图会按纯色背景去底并做边缘去溢色。
 
 **能直接同步进我的游戏工程吗？**
-可以：`python3 scripts/export.py --copy-to /path/to/游戏/assets`。脚本不会删除你的其它文件，但会覆盖同名文件，建议先导出确认。
+可以：`python3 scripts/export.py --copy-to /path/to/游戏/assets`。目标目录已有文件时会拒绝，确认覆盖后加 `--force`；建议先导出到交付目录确认，再同步。
 
 **改了风格要重做全部素材吗？**
 要重跑 `process.py` 和 `check_assets.py`；如果只改了色板/调色锁定，原始图可复用。改了描边/光照/生成方式，则需要重新生成受影响素材。

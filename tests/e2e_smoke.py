@@ -12,6 +12,12 @@ import sys
 import tempfile
 from pathlib import Path
 
+try:
+    import playwright  # noqa: F401
+    HAS_PLAYWRIGHT = True
+except ImportError:
+    HAS_PLAYWRIGHT = False
+
 from PIL import Image
 
 REPO = Path(__file__).resolve().parents[1]
@@ -91,7 +97,7 @@ PANEL = """<svg xmlns="http://www.w3.org/2000/svg" width="128" height="64" viewB
 
 GEM_HTML = """<!doctype html>
 <html><head><meta charset="utf-8">
-<style>html,body{margin:0;padding:0;background:transparent;overflow:hidden}canvas{display:block}</style>
+<style>html,body{margin:0;padding:0;background:transparent;overflow:hidden}canvas{display:block;image-rendering:pixelated}</style>
 </head><body><canvas id="c"></canvas><script>
 const p = new URLSearchParams(location.search);
 const w = Number(p.get('w') || 128), h = Number(p.get('h') || 128);
@@ -124,6 +130,13 @@ def run(cmd, cwd):
 
 
 def main():
+    if not (shutil.which("magick") or shutil.which("convert")):
+        print("SKIP: 需要 ImageMagick 渲染 SVG；安装后重跑（brew install imagemagick）")
+        return 0
+    if not HAS_PLAYWRIGHT:
+        print("SKIP: 需要 Playwright 渲染 HTML；安装后重跑（pip install playwright && playwright install chromium）")
+        return 0
+
     work = Path(tempfile.mkdtemp(prefix="game-asset-e2e-"))
     project = work / "工程"
     shutil.copytree(TEMPLATE, project)
@@ -186,6 +199,7 @@ def main():
 
     report = json.loads((project / "out/check_report.json").read_text(encoding="utf-8"))
     assert report["summary"]["ERROR"] == 0, report
+    assert report["summary"]["WARN"] == 0, report
 
     sheet = Image.open(dest / "预览/联系表.jpg")
     assert sheet.width > 0 and sheet.height > 0

@@ -1,7 +1,8 @@
 """精灵图集：把多张同尺寸帧拼成一张图并输出坐标元数据。
 
 用法：
-    python3 scripts/atlas.py build out/assets/character/character_knight_*.png \
+    # 用同一倍率的帧（通常是 1x），不要把 @1x 和 @2x 混在一起
+    python3 scripts/atlas.py build out/assets/character/character_knight_*@1x.png \
         -o out/atlas/knight.png --columns 4 --gap 0
 """
 from __future__ import annotations

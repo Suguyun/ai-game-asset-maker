@@ -7,9 +7,6 @@
     "engine": "generic"
   },
   "defaults": {
-    "mode": "ai-image",
-    "padding": 8,
-    "trim": true,
-    "anchor": "center"
+    "mode": "ai-image"
   }
 }

@@ -59,6 +59,18 @@ def load_project(root=None):
     project.setdefault("style", "style.json")
     project.setdefault("sizes", {})
     project.setdefault("defaults", {})
+    if not isinstance(project.get("sizes"), dict):
+        raise ConfigError("project.sizes 必须是对象")
+    if not isinstance(project.get("defaults"), dict):
+        raise ConfigError("project.defaults 必须是对象")
+    if not isinstance(project.get("style"), (str, Path)):
+        raise ConfigError("project.style 必须是路径字符串")
+    output = project.setdefault("output", {})
+    if not isinstance(output, dict):
+        raise ConfigError("project.output 必须是对象")
+    fmt = str(output.get("format", "png")).lower()
+    if fmt != "png":
+        raise ConfigError(f"第一版只支持 png 输出；project.output.format={fmt!r} 暂不支持")
     project["_root"] = str(root)
     return project
 
@@ -79,6 +91,20 @@ def load_style(project, root=None):
     style.setdefault("pixelGrid", 0)
     style.setdefault("paletteLock", False)
     style.setdefault("background", "transparent")
+    for key in ("keywords", "palette", "referenceImages", "avoid"):
+        if not isinstance(style.get(key), list):
+            raise ConfigError(f"style.{key} 必须是数组")
+    for color in style["palette"]:
+        try:
+            hex_to_rgb(color)
+        except Exception as exc:
+            raise ConfigError(f"style.palette 颜色不合法：{color!r}（{exc}）")
+    try:
+        style["pixelGrid"] = int(style.get("pixelGrid") or 0)
+    except (TypeError, ValueError):
+        raise ConfigError(f"style.pixelGrid 必须是整数：{style.get('pixelGrid')!r}")
+    if style["pixelGrid"] < 0:
+        raise ConfigError("style.pixelGrid 不能为负数")
     style["_path"] = str(path)
     return style
 
@@ -101,20 +127,33 @@ def load_assets(project, root=None):
     assets = data.get("assets") if isinstance(data, dict) else data
     if not isinstance(assets, list) or not assets:
         raise ConfigError(f"素材清单为空或格式不对：{path}")
+    seen_ids = set()
     for asset in assets:
         if not isinstance(asset, dict):
             raise ConfigError(f"素材项格式不对：{asset!r}")
         asset_id = asset.get("id")
         if not isinstance(asset_id, str) or not ID_RE.match(asset_id):
             raise ConfigError(f"素材 id 不合法（需小写蛇形，不能含路径分隔符）：{asset_id!r}")
+        if asset_id in seen_ids:
+            raise ConfigError(f"素材 id 重复：{asset_id}")
+        seen_ids.add(asset_id)
+        if asset.get("type") not in VALID_TYPES:
+            raise ConfigError(f"素材 {asset_id} 的 type 不合法：{asset.get('type')!r}")
+        asset.setdefault("mode", project.get("defaults", {}).get("mode", "ai-image"))
+        if asset["mode"] not in VALID_MODES:
+            raise ConfigError(f"素材 {asset_id} 的 mode 不合法：{asset['mode']!r}")
         frames = asset.get("frames") or []
         if isinstance(frames, str):
             frames = [frames]
+        if not isinstance(frames, (list, tuple)):
+            raise ConfigError(f"素材 {asset_id} 的 frames 必须是数组：{frames!r}")
+        frames = list(frames)
         for frame in frames:
             if not isinstance(frame, str) or not FRAME_RE.match(frame) or ".." in frame:
                 raise ConfigError(f"素材 {asset_id} 的帧名不合法：{frame!r}")
+        if len(frames) != len(set(frames)):
+            raise ConfigError(f"素材 {asset_id} 的 frames 有重复项")
         asset["frames"] = frames
-        asset.setdefault("mode", project.get("defaults", {}).get("mode", "ai-image"))
     return assets
 
 
@@ -151,10 +190,14 @@ def resolve_size(asset, project, presets, frame_count=1, style=None):
     spec = asset.get("size") or {}
     if isinstance(spec, str):
         spec = {"preset": spec}
+    if not isinstance(spec, dict):
+        raise ConfigError(f"素材 {asset.get('id')} 的 size 必须是对象或预设名")
     preset_name = spec.get("preset")
     if preset_name:
         if preset_name not in presets:
             raise ConfigError(f"素材 {asset.get('id')} 引用了不存在的尺寸预设：{preset_name}")
+        if not isinstance(presets[preset_name], dict):
+            raise ConfigError(f"尺寸预设 {preset_name} 必须是对象")
         merged.update(presets[preset_name])
 
     project_sizes = project.get("sizes") or {}
@@ -166,29 +209,40 @@ def resolve_size(asset, project, presets, frame_count=1, style=None):
         if key in defaults and key not in merged:
             merged[key] = defaults[key]
 
-    frames = max(1, int(frame_count))
-    columns = int(merged.get("columns") or (frames if frames > 1 else 1))
+    try:
+        frames = max(1, int(frame_count))
+        columns = int(merged.get("columns") or (frames if frames > 1 else 1))
+    except (TypeError, ValueError):
+        raise ConfigError(f"素材 {asset.get('id')} 的 columns/frame 数量必须是整数")
     columns = max(1, columns)
     cell = merged.get("cell")
 
-    if cell:
-        cell = int(cell)
-        rows = math.ceil(frames / columns)
-        merged["cell"] = cell
-        merged["rows"] = rows
-        merged["width"] = cell * columns
-        merged["height"] = cell * rows
-    else:
-        if not merged.get("width") or not merged.get("height"):
-            raise ConfigError(f"素材 {asset.get('id')} 缺少 width/height 或 cell")
-        merged["width"] = int(merged["width"])
-        merged["height"] = int(merged["height"])
-        merged["rows"] = math.ceil(frames / columns)
+    try:
+        if cell:
+            cell = int(cell)
+            rows = math.ceil(frames / columns)
+            merged["cell"] = cell
+            merged["rows"] = rows
+            merged["width"] = cell * columns
+            merged["height"] = cell * rows
+        else:
+            if not merged.get("width") or not merged.get("height"):
+                raise ConfigError(f"素材 {asset.get('id')} 缺少 width/height 或 cell")
+            merged["width"] = int(merged["width"])
+            merged["height"] = int(merged["height"])
+            merged["rows"] = math.ceil(frames / columns)
+    except (TypeError, ValueError):
+        raise ConfigError(f"素材 {asset.get('id')} 的 width/height/cell 必须是整数")
 
     merged["columns"] = columns
     merged["frames"] = frames
     scales = merged.get("scales") or [1]
-    merged["scales"] = sorted({int(s) for s in scales})
+    if not isinstance(scales, (list, tuple)):
+        raise ConfigError(f"素材 {asset.get('id')} 的 scales 必须是数组，例如 [1, 2]")
+    try:
+        merged["scales"] = sorted({int(s) for s in scales})
+    except (TypeError, ValueError):
+        raise ConfigError(f"素材 {asset.get('id')} 的 scales 必须是正整数")
     if any(s <= 0 for s in merged["scales"]):
         raise ConfigError(f"素材 {asset.get('id')} 的 scales 必须是正整数")
 
@@ -216,6 +270,25 @@ def frame_file(asset_id, frame):
 
 def raw_path(root, size, frame):
     return project_root(root) / "raw" / size["type"] / size["id"] / frame_file(size["id"], frame)
+
+
+def find_raw(root, size, frame):
+    """按约定查找原始图，支持 png/jpg/jpeg/webp。找不到返回 None。"""
+    base = raw_path(root, size, frame)
+    folder = base.parent
+    candidates = [base]
+    if frame:
+        candidates.append(folder / f"{size['id']}_{frame}.png")
+        for suffix in (".png", ".jpg", ".jpeg", ".webp"):
+            candidates.append(folder / f"{frame}{suffix}")
+            candidates.append(folder / f"{size['id']}_{frame}{suffix}")
+    else:
+        for suffix in (".png", ".jpg", ".jpeg", ".webp"):
+            candidates.append(folder / f"{size['id']}{suffix}")
+    for path in candidates:
+        if path.exists():
+            return path
+    return None
 
 
 def output_name(asset_type, asset_id, frame, scale):

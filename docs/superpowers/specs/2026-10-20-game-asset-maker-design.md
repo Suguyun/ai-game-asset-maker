@@ -149,11 +149,13 @@ ai-game-asset-maker/
     "sprite": { "cell": 64, "columns": 4, "transparent": true }
   },
   "output": { "format": "png", "engine": "generic" },
-  "defaults": { "mode": "ai-image", "padding": 8, "trim": true, "anchor": "center" }
+  "defaults": { "mode": "ai-image" }
 }
 ```
 
 - `sizes` 按素材类型覆盖 `library/presets/sizes.json`。
+- 第一版只支持 `output.format = "png"`；其他格式会报配置错误。
+- `defaults.mode` 是素材未声明 `mode` 时的默认生成模式；尺寸相关默认值由类型预设提供。
 - 素材项里的 `size` 可引用预设名或直接写对象，再覆盖任意字段。
 - 尺寸对象支持：`width`、`height`、`cell`、`scales`、`padding`、`trim`、`anchor`、`transparent`、`removeBg`、`columns`、`gap`、`frames`、`seamless`、`nineSlice`。
 - `removeBg` 默认对角色/图标/UI/特效开启，对背景/平铺关闭（整块纹理的纯色填充是内容，不是背景）。
@@ -200,7 +202,7 @@ assets:
 |---|---|
 | 去底 | 有 alpha 直接用；对象类素材无 alpha 时按四角采样纯色 key 去底并做边缘 despill；背景/平铺默认不去底；失败标记待人工 |
 | 裁切/补边 | trim 透明边 → 按 `anchor`（默认 center，角色可设 bottom-center）补到目标画布 → `padding` |
-| 缩放 | 像素风 nearest，其余 lanczos；按 `scales` 生成多倍图 |
+| 缩放 | 每个倍率直接从原始图重采样（避免 1x→2x 二次插值）；像素风 nearest 并二值化 alpha，其余 lanczos |
 | 调色锁定 | `paletteLock` 开启时量化到 Style Card 色板，报告平均色差 |
 | 精灵表 | 按 `columns`/`gap` 拼装，输出每帧坐标 |
 | 九宫格 | UI 输出 `nineSlice` 元数据并校验边距 |
@@ -242,6 +244,8 @@ outputs/<中文项目名>/
 ```
 
 `manifest.json` 包含：素材 id、type、name、尺寸、scales、帧列表、文件路径、色板、style 指纹、生成时间。
+
+`export.py` 在打包前读取 `out/check_report.json`：报告缺失、存在 ERROR、或报告早于最新成品/配置时拒绝交付；显式确认跳过用 `--skip-check`，缺成品强制继续用 `--allow-missing`。`--copy-to` 写入用户游戏工程前，目标目录已有文件时要求 `--force`。
 
 ## 11. 错误处理
 

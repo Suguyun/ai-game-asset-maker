@@ -25,7 +25,10 @@ def remove_solid_bg(im, tolerance=24):
     im = im.convert("RGBA")
     arr = np.array(im)
     alpha = arr[..., 3]
-    if int(alpha.min()) < 250:
+    # 用四边透明像素占比判断，而不是单个像素：AI 图常有一两个半透明杂点，
+    # 那不代表背景已经透明，仍需要按纯色 key 去除。
+    border = np.concatenate([alpha[0, :], alpha[-1, :], alpha[:, 0], alpha[:, -1]])
+    if border.size and float((border < 250).mean()) > 0.5:
         return im
 
     corners = [arr[0, 0, :3], arr[0, -1, :3], arr[-1, 0, :3], arr[-1, -1, :3]]
@@ -84,14 +87,13 @@ def fit_canvas(im, width, height, padding=0, anchor="center", nearest=False, cov
     resample = Image.NEAREST if nearest else Image.LANCZOS
 
     if cover:
-        scale = max(avail_w / im.width, avail_h / im.height)
+        # 不透明素材必须铺满画布，padding 不参与 cover，否则四周会留下透明边
+        scale = max(width / im.width, height / im.height)
         new_w = max(1, round(im.width * scale))
         new_h = max(1, round(im.height * scale))
         resized = im.resize((new_w, new_h), resample)
         canvas = Image.new("RGBA", (width, height), (0, 0, 0, 0))
-        x = padding + (avail_w - new_w) // 2
-        y = padding + (avail_h - new_h) // 2
-        canvas.paste(resized, (x, y), resized)
+        canvas.paste(resized, ((width - new_w) // 2, (height - new_h) // 2), resized)
         return canvas
 
     scale = min(avail_w / im.width, avail_h / im.height)
@@ -108,6 +110,14 @@ def fit_canvas(im, width, height, padding=0, anchor="center", nearest=False, cov
         y = (height - new_h) // 2
     canvas.alpha_composite(resized, (max(0, x), max(0, y)))
     return canvas
+
+
+def harden_alpha(im, threshold=128):
+    """像素风把 alpha 二值化，消除抗锯齿产生的半透明边缘。"""
+    arr = np.array(im.convert("RGBA"))
+    alpha = arr[..., 3]
+    arr[..., 3] = np.where(alpha >= threshold, 255, 0).astype(np.uint8)
+    return Image.fromarray(arr, "RGBA")
 
 
 def quantize_to_palette(im, palette, chunk=65536):
@@ -142,20 +152,6 @@ def palette_delta(im, palette, sample=20000):
     return float(np.sqrt(distances.min(axis=1)).mean())
 
 
-def find_raw(root, size, frame):
-    base = common.raw_path(root, size, frame)
-    candidates = [base]
-    folder = base.parent
-    if frame:
-        candidates.append(folder / f"{size['id']}_{frame}.png")
-    for suffix in (".png", ".jpg", ".jpeg", ".webp"):
-        candidates.append(folder / f"{frame or size['id']}{suffix}")
-    for path in candidates:
-        if path.exists():
-            return path
-    return None
-
-
 def process_asset(root, project, style, asset, presets):
     frames = common.frames_of(asset)
     size = common.resolve_size(asset, project, presets, len(frames), style=style)
@@ -174,7 +170,7 @@ def process_asset(root, project, style, asset, presets):
     base_frames = []
 
     for frame in frames:
-        raw = find_raw(root, size, frame)
+        raw = common.find_raw(root, size, frame)
         if not raw:
             raise FileNotFoundError(f"缺原始图 {common.raw_path(root, size, frame)}")
         original = ImageOps.exif_transpose(Image.open(raw)).convert("RGBA")
@@ -199,6 +195,8 @@ def process_asset(root, project, style, asset, presets):
                 nearest=pixel,
                 cover=cover,
             )
+            if pixel:
+                canvas = harden_alpha(canvas)
             if palette:
                 report["palette_delta"] = max(report["palette_delta"], palette_delta(canvas, palette))
                 canvas = quantize_to_palette(canvas, palette)

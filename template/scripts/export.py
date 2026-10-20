@@ -3,12 +3,13 @@
 用法：
     python3 scripts/export.py
     python3 scripts/export.py --dest /path/to/游戏素材
-    python3 scripts/export.py --copy-to /path/to/游戏工程/assets
+    python3 scripts/export.py --copy-to /path/to/游戏工程/assets --force
 """
 from __future__ import annotations
 
 import argparse
 import json
+import re
 import shutil
 import sys
 from datetime import datetime, timezone
@@ -22,11 +23,12 @@ def default_dest(root, project):
     root = common.project_root(root)
     if root.name == "工程":
         return root.parent
-    safe_name = str(project.get("name") or "游戏素材").replace("/", "_").replace("\\", "_")
-    return root.parent / "outputs" / safe_name
+    raw_name = str(project.get("name") or "游戏素材")
+    safe_name = re.sub(r"[^\w一-鿿.-]+", "_", raw_name).replace("..", "__").strip("._-")
+    return root.parent / "outputs" / (safe_name or "游戏素材")
 
 
-def export(root=None, dest=None, copy_to=None):
+def export(root=None, dest=None, copy_to=None, force=False, skip_check=False, allow_missing=False):
     root_path = common.project_root(root)
     project = common.load_project(root_path)
     style = common.load_style(project, root_path)
@@ -35,6 +37,52 @@ def export(root=None, dest=None, copy_to=None):
     dest = Path(dest).expanduser().resolve() if dest else default_dest(root_path, project)
     dest = dest.resolve()
     common.ensure_dir(dest)
+
+    # 交付闸门：没有最新的 0-ERROR 校验报告，不允许打包
+    check_path = root_path / "out" / "check_report.json"
+    if not skip_check:
+        if not check_path.exists():
+            print("ERROR 缺少 out/check_report.json；先运行 check_assets.py", file=sys.stderr)
+            return 1
+        try:
+            check_report = json.loads(check_path.read_text(encoding="utf-8"))
+        except Exception as exc:
+            print(f"ERROR 无法读取 check_report.json：{exc}", file=sys.stderr)
+            return 1
+        if int(check_report.get("summary", {}).get("ERROR", 0)) > 0:
+            print("ERROR 校验报告仍有 ERROR，修到 0 ERROR 再交付", file=sys.stderr)
+            return 1
+        watched = [
+            *(p for p in (root_path / "out" / "assets").rglob("*") if p.is_file()),
+            *(p for p in (root_path / "project.json", root_path / "assets.yaml", Path(style["_path"])) if p.exists()),
+        ]
+        newest = max((p.stat().st_mtime for p in watched), default=0)
+        if newest > check_path.stat().st_mtime + 2:
+            print("ERROR check_report.json 早于最新成品或配置；重跑 check_assets.py（或加 --skip-check）", file=sys.stderr)
+            return 1
+
+    expected = []
+    for asset in assets:
+        frames = common.frames_of(asset)
+        size = common.resolve_size(asset, project, presets, len(frames), style=style)
+        for frame in frames:
+            for scale in size["scales"]:
+                expected.append(common.output_path(root_path, size, frame, scale))
+    missing = [path for path in expected if not path.exists()]
+    if missing and not allow_missing:
+        for path in missing:
+            print(f"ERROR 缺成品 {path.relative_to(root_path)}", file=sys.stderr)
+        print("补齐后重新运行 process.py / check_assets.py；或加 --allow-missing 强制继续", file=sys.stderr)
+        return 1
+
+    copy_target = None
+    if copy_to:
+        target_path = Path(copy_to).expanduser().resolve()
+        copy_target = target_path if target_path.name == "assets" else target_path / "assets"
+        if copy_target.exists() and any(copy_target.iterdir()) and not force:
+            print(f"ERROR 目标目录已有文件：{copy_target}", file=sys.stderr)
+            print("确认要覆盖请加 --force；建议先导出到交付目录让用户确认", file=sys.stderr)
+            return 1
 
     warnings = []
     manifest_assets = []
@@ -128,11 +176,10 @@ def export(root=None, dest=None, copy_to=None):
     write_asset_list(dest, project, style, asset_rows)
     write_usage(dest, project, style, manifest_assets)
 
-    if copy_to:
-        target = Path(copy_to).expanduser().resolve() / "assets" if Path(copy_to).name != "assets" else Path(copy_to).expanduser().resolve()
-        common.ensure_dir(target)
-        shutil.copytree(dest / "assets", target, dirs_exist_ok=True)
-        print(f"已同步素材到 {target}")
+    if copy_target:
+        common.ensure_dir(copy_target)
+        shutil.copytree(dest / "assets", copy_target, dirs_exist_ok=True)
+        print(f"已同步素材到 {copy_target}")
 
     for warning in warnings:
         print(f"WARN {warning}", file=sys.stderr)
@@ -222,9 +269,12 @@ def main():
     ap.add_argument("--project", help="工程根目录")
     ap.add_argument("--dest", help="交付目录；默认 outputs/<项目名> 或 工程 的上级目录")
     ap.add_argument("--copy-to", help="额外同步一份 assets/ 到游戏工程")
+    ap.add_argument("--force", action="store_true", help="--copy-to 目标已有文件时允许覆盖")
+    ap.add_argument("--skip-check", action="store_true", help="跳过 check_report.json 的 0-ERROR 闸门")
+    ap.add_argument("--allow-missing", action="store_true", help="缺成品时仍然继续导出")
     args = ap.parse_args()
     try:
-        return export(args.project, args.dest, args.copy_to)
+        return export(args.project, args.dest, args.copy_to, args.force, args.skip_check, args.allow_missing)
     except common.ConfigError as exc:
         print(f"配置错误：{exc}", file=sys.stderr)
         return 2

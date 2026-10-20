@@ -52,10 +52,15 @@ def semi_transparent_ratio(im):
     return float(((alpha > 0) & (alpha < 255)).sum() / alpha.size)
 
 
-def unique_colors(im):
+def unique_colors(im, sample=200000):
     arr = np.array(im.convert("RGBA"))
     opaque = arr[arr[..., 3] > 0][:, :3]
-    return len({tuple(pixel) for pixel in opaque})
+    if not len(opaque):
+        return 0
+    if len(opaque) > sample:
+        step = max(1, len(opaque) // sample)
+        opaque = opaque[::step]
+    return int(np.unique(opaque, axis=0).shape[0])
 
 
 def nine_slice_ok(width, height, nine):
@@ -88,7 +93,11 @@ def check_asset(root, project, style, asset, presets):
             if not path.exists():
                 add(checks, "ERROR", "missing", f"缺少成品 {path.relative_to(common.project_root(root))}")
                 continue
-            im = Image.open(path).convert("RGBA")
+            try:
+                im = Image.open(path).convert("RGBA")
+            except Exception as exc:
+                add(checks, "ERROR", "corrupt", f"{label} 无法读取：{exc}")
+                continue
             expected = (frame_w * scale, frame_h * scale)
             if im.size != expected:
                 add(checks, "ERROR", "size", f"{label} 尺寸 {im.size} != {expected}")
@@ -104,10 +113,39 @@ def check_asset(root, project, style, asset, presets):
         if chosen_scale[frame] != 1 and im.size == (frame_w * chosen_scale[frame], frame_h * chosen_scale[frame]):
             one_x[frame] = im.resize((frame_w, frame_h), resample)
 
+    # 所有类型都先查空图：全透明一律 ERROR
+    for frame, im in one_x.items():
+        if alpha_bbox(im) is None:
+            add(checks, "ERROR", "empty", f"{frame or asset['id']} 画面全透明")
+
     if size.get("transparent", True) and size["type"] not in ("tile", "background"):
         for frame, im in one_x.items():
             if im.getchannel("A").getextrema()[0] >= 255:
                 add(checks, "ERROR", "alpha", f"{frame or asset['id']} 没有透明像素（需要透明背景）")
+
+    if not size.get("transparent", True):
+        for frame, im in one_x.items():
+            if int(im.getchannel("A").getextrema()[0]) < 255:
+                add(checks, "ERROR", "opaque", f"{frame or asset['id']} 声明为不透明，但画面含透明像素")
+
+    # 对象类素材如果四边几乎全不透明且角部颜色一致，多半是没抠干净的纯色背景
+    if size.get("transparent", True) and size["type"] in ("character", "sprite", "icon", "vfx"):
+        for frame, im in one_x.items():
+            alpha = np.array(im)[..., 3]
+            if not alpha.size:
+                continue
+            border = np.concatenate([alpha[0, :], alpha[-1, :], alpha[:, 0], alpha[:, -1]])
+            if float((border >= 250).mean()) > 0.98:
+                corners = [
+                    np.array(im.getpixel((0, 0))[:3], dtype=np.int32),
+                    np.array(im.getpixel((im.width - 1, 0))[:3], dtype=np.int32),
+                    np.array(im.getpixel((0, im.height - 1))[:3], dtype=np.int32),
+                    np.array(im.getpixel((im.width - 1, im.height - 1))[:3], dtype=np.int32),
+                ]
+                spread = max(float(np.linalg.norm(corner - corners[0])) for corner in corners)
+                if spread < 24:
+                    add(checks, "ERROR", "background_residue",
+                        f"{frame or asset['id']} 四边几乎全不透明且颜色一致，疑似未去除的纯色背景")
 
     if size["type"] in ("tile", "background"):
         for frame, im in one_x.items():
@@ -115,13 +153,10 @@ def check_asset(root, project, style, asset, presets):
             opaque_ratio = float((alpha > 0).mean()) if alpha.size else 0.0
             if opaque_ratio < 0.30:
                 add(checks, "ERROR", "content", f"{asset['id']} 内容几乎全透明（不透明像素仅 {opaque_ratio:.0%}）")
-            if not size.get("transparent") and int(alpha.min()) < 255:
-                add(checks, "WARN", "opaque", f"{asset['id']} 声明为不透明，但画面含透明像素")
 
     if size["type"] == "icon":
         for frame, im in one_x.items():
-            if not alpha_bbox(im):
-                add(checks, "ERROR", "empty", f"{asset['id']} 画面全透明")
+            if alpha_bbox(im) is None:
                 continue
             ratio = fill_ratio(im)
             if ratio < 0.70:
@@ -183,8 +218,13 @@ def check_asset(root, project, style, asset, presets):
         if not atlas_image.exists() or not atlas_json.exists():
             add(checks, "ERROR", "atlas", f"{asset['id']} 缺少图集 {atlas_image.name}/{atlas_json.name}")
         else:
-            image = Image.open(atlas_image)
-            meta = json.loads(atlas_json.read_text(encoding="utf-8"))
+            try:
+                image = Image.open(atlas_image)
+                image.load()
+                meta = json.loads(atlas_json.read_text(encoding="utf-8"))
+            except Exception as exc:
+                add(checks, "ERROR", "atlas_read", f"{asset['id']} 图集无法读取：{exc}")
+                return checks, size
             if list(image.size) != list(meta.get("image_size", [])):
                 add(checks, "ERROR", "atlas_size", f"{asset['id']} 图集尺寸 {image.size} != 元数据 {meta.get('image_size')}")
             if len(meta.get("frames", [])) != len(frames):
@@ -199,7 +239,7 @@ def check_asset(root, project, style, asset, presets):
     return checks, size
 
 
-def run(root=None):
+def run(root=None, quiet=False):
     root_path = common.project_root(root)
     project = common.load_project(root_path)
     style = common.load_style(project, root_path)
@@ -209,7 +249,10 @@ def run(root=None):
     results = []
     counts = {"ERROR": 0, "WARN": 0, "OK": 0}
     for asset in assets:
-        checks, _ = check_asset(root_path, project, style, asset, presets)
+        try:
+            checks, _ = check_asset(root_path, project, style, asset, presets)
+        except Exception as exc:
+            checks = [{"level": "ERROR", "code": "exception", "message": f"检查失败：{exc}"}]
         errors = [c for c in checks if c["level"] == "ERROR"]
         warns = [c for c in checks if c["level"] == "WARN"]
         counts["ERROR"] += len(errors)
@@ -217,8 +260,9 @@ def run(root=None):
         if not errors and not warns:
             counts["OK"] += 1
         results.append({"id": asset.get("id"), "type": asset.get("type"), "checks": checks})
-        for check in checks:
-            print(f"{check['level']:<6}{asset.get('id'):<18}{check['message']}")
+        if not quiet:
+            for check in checks:
+                print(f"{check['level']:<6}{asset.get('id'):<18}{check['message']}")
 
     report = {
         "project": project.get("name"),
@@ -229,17 +273,18 @@ def run(root=None):
     }
     out = common.ensure_dir(root_path / "out") / "check_report.json"
     out.write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
-    print(f"\n{counts['ERROR']} ERROR，{counts['WARN']} WARN，{counts['OK']} 个素材全过；报告 {out}")
+    if not quiet:
+        print(f"\n{counts['ERROR']} ERROR，{counts['WARN']} WARN，{counts['OK']} 个素材全过；报告 {out}")
     return 0 if counts["ERROR"] == 0 else 1, report
 
 
 def main():
     ap = argparse.ArgumentParser(description="素材质量闸门")
     ap.add_argument("--project", help="工程根目录")
-    ap.add_argument("--json", action="store_true", help="把完整报告打印到 stdout")
+    ap.add_argument("--json", action="store_true", help="把完整报告打印到 stdout（不混入诊断文本）")
     args = ap.parse_args()
     try:
-        code, report = run(args.project)
+        code, report = run(args.project, quiet=args.json)
     except common.ConfigError as exc:
         print(f"配置错误：{exc}", file=sys.stderr)
         return 2

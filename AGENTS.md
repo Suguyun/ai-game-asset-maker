@@ -74,8 +74,8 @@ Skill 用法另有四条约定：
 ├── 设计说明.md        # 风格卡要点、生成方式、已知限制
 ├── assets/            # 交付素材（export.py 生成）
 │   ├── character/ icon/ background/ tile/ ui/ vfx/ sprite/
-│   ├── atlas/         # 多帧素材的精灵表 + 坐标 JSON
-│   └── manifest.json
+│   └── atlas/         # 多帧素材的精灵表 + 坐标 JSON
+├── manifest.json      # 机器可读清单（交付目录根部）
 ├── 预览/              # 联系表与分类预览
 └── 工程/              # 从 <工具目录>/template 复制来的完整工程
 ```
@@ -191,7 +191,7 @@ python3 scripts/plan.py --check-raw     # 缺图就阻塞，逐项列出
 
 - 在 `codegen/src/` 写 `<id>.svg` 或 `<id>.html`；多帧优先 `<id>__<frame>.svg`，或让同一个 HTML 根据 `?frame=` 参数绘制。
 - SVG 用固定 `viewBox`，所有形状落在整数网格上；像素风加 `shape-rendering="crispEdges"`，只用 `style.json` 色板里的颜色。
-- HTML 页面只允许本地资源，禁止外链；页面尺寸就是目标单帧尺寸，渲染脚本会按最大倍数放大截图。
+- HTML 页面只允许本地资源，禁止外链；`render.py` 会把 `?w=&h=` 传成最终输出像素尺寸（单帧尺寸 × 最大倍数），页面按这个尺寸绘制，避免缩放插值。
 - 颜色直接从 `style.json` 抄，不要在代码里另造一套色板。
 - 跑 `python3 scripts/render.py`（或 `--id` / `--scale` / `--force`）渲染到 `raw/`。
 
@@ -238,12 +238,14 @@ python3 scripts/sheet.py            # 生成 out/sheet.jpg 联系表
 
 ```bash
 python3 scripts/export.py                          # 默认输出到 outputs/<项目名> 或 工程 的上级目录
-python3 scripts/export.py --copy-to /path/to/游戏/assets
+python3 scripts/export.py --copy-to /path/to/游戏/assets --force   # 目标已有文件时加 --force
 ```
 
 导出会生成：分类 `assets/`、`assets/atlas/`、`manifest.json`、`素材清单.md`、`使用说明.md`、`预览/`。如果工程根目录有 `需求确认.md`，一起复制。
 
-`--copy-to` 会覆盖目标目录里的同名文件。**未经用户同意不要直接写进他的游戏工程**；先导出到交付目录，让用户确认后再同步。
+`export.py` 会检查 `out/check_report.json`：缺报告、有 ERROR、或报告早于最新成品都会拒绝打包；确认要跳过时用 `--skip-check`。缺成品时默认失败，确认要部分交付才用 `--allow-missing`。
+
+`--copy-to` 在目标目录已有文件时会拒绝执行；确认覆盖要加 `--force`。**未经用户同意不要直接写进他的游戏工程**；先导出到交付目录，让用户确认后再同步。
 
 汇报格式：先说结果（交付目录、素材数量、类型分布、尺寸规格），再说关键创作决定（风格、生成模式、色板、帧数），最后列出**需要用户亲自确认的点**（风格是否对味、透明边缘、九宫格、引擎导入是否需要特殊设置）。
 

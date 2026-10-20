@@ -3,7 +3,8 @@
 约定：
 - 单帧：codegen/src/<id>.svg 或 <id>.html
 - 多帧：优先 codegen/src/<id>__<frame>.svg，其次同一个 <id>.svg / <id>.html
-- HTML 页面会收到查询参数 ?frame=<frame>&scale=<scale>&w=<w>&h=<h>
+- HTML 页面会收到查询参数 ?frame=<frame>&scale=<scale>&w=<w>&h=<h>，
+  其中 w/h 是最终输出像素尺寸（已含倍数），页面按这个尺寸绘制
 - 输出尺寸 = 素材单帧尺寸 × 最大导出倍数，写到 raw/<type>/<id>/<frame>.png
 
 用法：
@@ -56,14 +57,23 @@ def render_html(src, dst, width, height, scale, frame):
     except ImportError as exc:
         raise RuntimeError("缺少 Playwright：pip install playwright && playwright install chromium") from exc
 
-    query = f"?frame={quote(str(frame or ''))}&scale={scale}&w={width}&h={height}"
+    out_w = max(1, width * max(1, scale))
+    out_h = max(1, height * max(1, scale))
+    query = f"?frame={quote(str(frame or ''))}&scale={scale}&w={out_w}&h={out_h}"
     url = src.resolve().as_uri() + query
+
+    def local_only(route):
+        # 只允许本地文件，禁止页面联网拉取外部资源
+        if route.request.url.startswith(("file://", "data:", "about:")):
+            route.continue_()
+        else:
+            route.abort()
+
     with sync_playwright() as p:
         browser = p.chromium.launch()
-        page = browser.new_page(
-            viewport={"width": width, "height": height},
-            device_scale_factor=max(1, scale),
-        )
+        # 直接按最终像素尺寸渲染（dsf=1），避免合成器在 scale>1 时插值糊掉像素边缘
+        page = browser.new_page(viewport={"width": out_w, "height": out_h}, device_scale_factor=1)
+        page.route("**/*", local_only)
         page.goto(url, wait_until="load")
         page.wait_for_timeout(120)
         page.screenshot(path=str(dst), omit_background=True)

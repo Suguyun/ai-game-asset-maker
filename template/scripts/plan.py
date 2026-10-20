@@ -85,7 +85,7 @@ def build_matrix(project, style, assets, presets, root):
         missing_raw = [
             str(common.raw_path(root, size, frame).relative_to(common.project_root(root)))
             for frame in frames
-            if not common.raw_path(root, size, frame).exists()
+            if common.find_raw(root, size, frame) is None
         ]
         if missing_raw:
             warnings.append(f"{asset_id}：缺原始图 {len(missing_raw)} 张")
@@ -109,7 +109,7 @@ def build_matrix(project, style, assets, presets, root):
                      "anchor": size["anchor"], "transparent": size["transparent"],
                      "seamless": size["seamless"], "nineSlice": size.get("nineSlice")},
             "scales": size["scales"],
-            "frames": frames,
+            "frames": [f for f in frames if f],
             "outputs": outputs,
             "atlas": atlas,
             "missing_raw": missing_raw,
