@@ -1,0 +1,99 @@
+{
+  "icon": {
+    "width": 256,
+    "height": 256,
+    "scales": [
+      1,
+      2
+    ],
+    "padding": 8,
+    "trim": true,
+    "anchor": "center",
+    "transparent": true,
+    "removeBg": true
+  },
+  "character": {
+    "width": 512,
+    "height": 512,
+    "scales": [
+      1,
+      2
+    ],
+    "padding": 8,
+    "trim": true,
+    "anchor": "bottom-center",
+    "transparent": true,
+    "removeBg": true
+  },
+  "sprite": {
+    "cell": 64,
+    "columns": 4,
+    "scales": [
+      1
+    ],
+    "gap": 0,
+    "padding": 0,
+    "trim": false,
+    "anchor": "bottom-center",
+    "transparent": true,
+    "removeBg": true
+  },
+  "background": {
+    "width": 1920,
+    "height": 1080,
+    "scales": [
+      1
+    ],
+    "padding": 0,
+    "trim": false,
+    "anchor": "center",
+    "transparent": false,
+    "removeBg": false
+  },
+  "tile": {
+    "width": 64,
+    "height": 64,
+    "scales": [
+      1,
+      2
+    ],
+    "padding": 0,
+    "trim": false,
+    "anchor": "center",
+    "transparent": true,
+    "seamless": true,
+    "removeBg": false
+  },
+  "ui": {
+    "width": 512,
+    "height": 128,
+    "scales": [
+      1,
+      2
+    ],
+    "padding": 0,
+    "trim": false,
+    "anchor": "center",
+    "transparent": true,
+    "nineSlice": {
+      "left": 32,
+      "right": 32,
+      "top": 32,
+      "bottom": 32
+    },
+    "removeBg": true
+  },
+  "vfx": {
+    "cell": 128,
+    "columns": 8,
+    "scales": [
+      1
+    ],
+    "gap": 0,
+    "padding": 4,
+    "trim": false,
+    "anchor": "center",
+    "transparent": true,
+    "removeBg": true
+  }
+}

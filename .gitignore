@@ -1,0 +1,18 @@
+# 项目产物（每个项目的原始图、中间产物与交付包都不提交）
+outputs/*
+!outputs/.gitkeep
+template/out/*
+!template/out/.gitkeep
+template/raw/*
+!template/raw/.gitkeep
+template/prompts/*
+!template/prompts/.gitkeep
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+.pytest_cache/
+
+# 系统
+.DS_Store

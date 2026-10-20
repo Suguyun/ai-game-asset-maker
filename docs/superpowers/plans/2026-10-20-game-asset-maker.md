@@ -527,7 +527,7 @@ python3 -m unittest tests.test_process -v
 
 规则：
 
-- 四角采样：3 个以上角落颜色距离 < tolerance 才判定为纯色背景并去除；去底后做 1px 边缘 despill（半透明像素的颜色向邻居不透明色靠拢）。
+- 四角采样：3 个以上角落颜色距离 < tolerance 才判定为纯色背景并去除；去底后做 1px 边缘 despill（半透明像素的颜色向邻居不透明色靠拢）。背景（`background`）和平铺（`tile`）默认 `removeBg: false`，整块纹理的纯色填充是内容，不是背景。
 - `trim_alpha` 用 alpha channel 的 `getbbox()`，四周加 `padding`，越界裁剪。
 - `fit_canvas` 等比缩放到 `(W-2p, H-2p)` 内；`anchor` 支持 `center`、`bottom-center`、`top-center`；透明画布 RGBA。
 - 调色板量化：枚举像素 RGB，映射到最近色（欧氏距离），alpha 不变；numpy 向量化。
@@ -622,7 +622,8 @@ if __name__ == "__main__":
 |---|---|
 | 文件/尺寸 | 缺文件或尺寸不符 → ERROR |
 | 透明 | 类型要求透明但无透明像素 → ERROR |
-| 图标占比 | 主体面积占比 < 0.70 或 > 0.85 → WARN |
+| 图标占比 | 主体包围盒较长边占画布 < 0.70 或 > 0.95 → WARN |
+| 背景/平铺内容 | 不透明像素占比 < 30% → ERROR（防止被误抠空） |
 | 角色基线 | 各帧最底非透明行差 > 2px → ERROR |
 | 精灵表 | 尺寸、帧数与矩阵不符 → ERROR |
 | 像素风 | 1x 图中半透明像素（0<a<255）占比 > 1% → WARN；颜色数 > 色板数 × 3 → WARN |

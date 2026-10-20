@@ -1,0 +1,49 @@
+assets:
+  - id: knight
+    type: character
+    name: 骑士
+    mode: code-draw
+    size: { preset: character, width: 128, height: 128, scales: [1, 2] }
+    frames: [idle, walk]
+    notes: "重甲骑士，蓝色披风，脚底对齐"
+
+  - id: potion_red
+    type: icon
+    name: 红药水
+    mode: code-draw
+    size: { preset: icon, width: 256, height: 256, scales: [1, 2] }
+    notes: "红色恢复药水，透明玻璃瓶"
+
+  - id: sword_iron
+    type: icon
+    name: 铁剑
+    mode: code-draw
+    size: { preset: icon, width: 256, height: 256, scales: [1, 2] }
+    notes: "初始装备，铁质剑身与木质握柄"
+
+  - id: coin_gold
+    type: icon
+    name: 金币
+    mode: code-draw
+    size: { preset: icon, width: 256, height: 256, scales: [1, 2] }
+    notes: "通用货币，正面铸印"
+
+  - id: grass_tile
+    type: tile
+    name: 草地
+    mode: code-draw
+    size: { preset: tile, width: 64, height: 64, scales: [1, 2] }
+    notes: "可无缝平铺的草地"
+
+  - id: panel_blue
+    type: ui
+    name: 蓝色面板
+    mode: code-draw
+    size:
+      preset: ui
+      width: 256
+      height: 64
+      scales: [1]
+      transparent: false
+      nineSlice: { left: 16, right: 16, top: 16, bottom: 16 }
+    notes: "九宫格对话框/菜单底板"

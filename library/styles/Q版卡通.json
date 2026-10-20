@@ -1,0 +1,39 @@
+{
+  "name": "Q版卡通",
+  "keywords": [
+    "chibi style",
+    "big head small body",
+    "thick clean outline",
+    "candy colors",
+    "cute game asset",
+    "sticker-like"
+  ],
+  "palette": [
+    "#2B2D42",
+    "#FF6B9D",
+    "#FFB4C8",
+    "#FFD166",
+    "#06D6A0",
+    "#4CC9F0",
+    "#7B61FF",
+    "#FFFFFF",
+    "#FFF3E6",
+    "#8D99AE"
+  ],
+  "line": "3-4px rounded dark outline, consistent width",
+  "lighting": "soft cel shading, one highlight, top-left light",
+  "material": "smooth plastic and candy-like surfaces",
+  "referenceImages": [],
+  "avoid": [
+    "realistic proportions",
+    "gritty texture",
+    "muted colors",
+    "text",
+    "watermark",
+    "3d render",
+    "photo texture"
+  ],
+  "pixelGrid": 0,
+  "paletteLock": false,
+  "background": "transparent"
+}

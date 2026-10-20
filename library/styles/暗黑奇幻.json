@@ -1,0 +1,41 @@
+{
+  "name": "暗黑奇幻",
+  "keywords": [
+    "dark fantasy",
+    "painterly realism",
+    "gothic atmosphere",
+    "dramatic rim light",
+    "weathered metal",
+    "eldritch detail"
+  ],
+  "palette": [
+    "#0B0A12",
+    "#1C1726",
+    "#31243A",
+    "#4A3350",
+    "#6B4A5E",
+    "#8E6A6A",
+    "#C9A227",
+    "#E8B04B",
+    "#B33A3A",
+    "#5E7A6B",
+    "#93A8A0",
+    "#D9D2C5"
+  ],
+  "line": "no outline, edges defined by value contrast",
+  "lighting": "single cold key light, warm ember bounce, deep shadows",
+  "material": "weathered metal, cracked stone, worn leather, bone",
+  "referenceImages": [],
+  "avoid": [
+    "bright saturated colors",
+    "cute style",
+    "flat vector",
+    "text",
+    "watermark",
+    "clean plastic",
+    "symmetrical composition"
+  ],
+  "pixelGrid": 0,
+  "paletteLock": false,
+  "background": "transparent"
+}

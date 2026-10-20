@@ -1,0 +1,40 @@
+{
+  "name": "手绘水彩",
+  "keywords": [
+    "hand-painted watercolor",
+    "visible paper grain",
+    "soft bleeding edges",
+    "storybook illustration",
+    "muted natural palette"
+  ],
+  "palette": [
+    "#3D405B",
+    "#5C6B73",
+    "#81B29A",
+    "#A8C686",
+    "#E9C46A",
+    "#F4A261",
+    "#E76F51",
+    "#B56576",
+    "#DDBEA9",
+    "#F1E9DA",
+    "#8E9AAF",
+    "#2F3E46"
+  ],
+  "line": "loose ink line, uneven width, slight bleeding",
+  "lighting": "soft diffuse daylight, gentle shadows",
+  "material": "watercolor wash, pigment granulation, paper texture",
+  "referenceImages": [],
+  "avoid": [
+    "hard vector edges",
+    "neon colors",
+    "3d render",
+    "text",
+    "watermark",
+    "photographic realism",
+    "perfect symmetry"
+  ],
+  "pixelGrid": 0,
+  "paletteLock": false,
+  "background": "transparent"
+}

@@ -1,0 +1,12 @@
+{
+  "name": "示例游戏",
+  "style": "style.json",
+  "sizes": {},
+  "output": {
+    "format": "png",
+    "engine": "generic"
+  },
+  "defaults": {
+    "mode": "ai-image"
+  }
+}
