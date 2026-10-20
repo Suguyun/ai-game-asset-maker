@@ -157,7 +157,8 @@ ai-game-asset-maker/
 - 第一版只支持 `output.format = "png"`；其他格式会报配置错误。
 - `defaults.mode` 是素材未声明 `mode` 时的默认生成模式；尺寸相关默认值由类型预设提供。
 - 素材项里的 `size` 可引用预设名或直接写对象，再覆盖任意字段。
-- 尺寸对象支持：`width`、`height`、`cell`、`scales`、`padding`、`trim`、`anchor`、`transparent`、`removeBg`、`columns`、`gap`、`frames`、`seamless`、`nineSlice`。
+- 尺寸对象支持：`width`、`height`、`cell`、`scales`、`padding`、`trim`、`anchor`、`transparent`、`removeBg`、`columns`、`gap`、`frames`、`seamless`、`nineSlice`、`baseline`。
+- `baseline: false` 用于武器层、特效层等不以脚底对齐的素材，关闭角色的脚底基线检查。
 - `removeBg` 默认对角色/图标/UI/特效开启，对背景/平铺关闭（整块纹理的纯色填充是内容，不是背景）。
 
 ### 6.3 `assets.yaml`
@@ -178,10 +179,17 @@ assets:
     mode: code-draw
     size: { preset: icon, width: 128, height: 128, scales: [1, 2, 4] }
     notes: "圆形瓶身，红色药水，白色高光"
+
+  - id: hero_s_body
+    type: sprite
+    mode: code-draw
+    size: { preset: sprite, cell: 32, columns: 6, baseline: true }
+    animations: { idle: 6, run: 6, shoot: 6, hurt: 6, death: 6 }
 ```
 
-`type` 取值：`character`、`icon`、`background`、`tile`、`ui`、`vfx`。
+`type` 取值：`character`、`sprite`、`icon`、`background`、`tile`、`ui`、`vfx`。
 `id` 使用小写蛇形命名，作为文件名与图集键。
+`animations` 可代替 `frames`：按动画名和帧数自动推导 `<动画>_<序号>` 帧序列，并把行顺序写进图集 JSON；每动画帧数等于 `columns` 时，正好「行=动画、列=帧」。
 
 ## 7. 工作流（AGENTS.md，十个阶段 0~9）
 

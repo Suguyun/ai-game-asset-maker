@@ -38,6 +38,16 @@ class ConfigTest(unittest.TestCase):
         with self.assertRaises(common.ConfigError):
             self._load("assets:\n  - id: knight\n    type: character\n    frames: 4\n")
 
+    def test_derives_frames_from_animations(self):
+        assets = self._load("assets:\n  - id: hero\n    type: sprite\n    animations: {idle: 2, run: 3}\n")
+        self.assertEqual(assets[0]["frames"], ["idle_0", "idle_1", "run_0", "run_1", "run_2"])
+        self.assertEqual(assets[0]["animations"], {"idle": 2, "run": 3})
+
+    def test_rejects_frames_animations_mismatch(self):
+        text = "assets:\n  - id: hero\n    type: sprite\n    frames: [a]\n    animations: {idle: 2}\n"
+        with self.assertRaises(common.ConfigError):
+            self._load(text)
+
     def test_rejects_duplicate_ids(self):
         text = "assets:\n  - id: potion\n    type: icon\n  - id: potion\n    type: icon\n"
         with self.assertRaises(common.ConfigError):

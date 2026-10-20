@@ -148,6 +148,29 @@ def load_assets(project, root=None):
         if not isinstance(frames, (list, tuple)):
             raise ConfigError(f"素材 {asset_id} 的 frames 必须是数组：{frames!r}")
         frames = list(frames)
+
+        animations = asset.get("animations")
+        if animations is not None:
+            if not isinstance(animations, dict) or not animations:
+                raise ConfigError(f"素材 {asset_id} 的 animations 必须是非空对象，如 {{idle: 6, run: 6}}")
+            normalized = {}
+            derived = []
+            for name, count in animations.items():
+                if not isinstance(name, str) or not ID_RE.match(name):
+                    raise ConfigError(f"素材 {asset_id} 的动画名不合法：{name!r}")
+                try:
+                    count = int(count)
+                except (TypeError, ValueError):
+                    raise ConfigError(f"素材 {asset_id} 的动画 {name} 帧数必须是整数：{count!r}")
+                if count <= 0:
+                    raise ConfigError(f"素材 {asset_id} 的动画 {name} 帧数必须大于 0")
+                normalized[name] = count
+                derived.extend(f"{name}_{index}" for index in range(count))
+            if frames and frames != derived:
+                raise ConfigError(f"素材 {asset_id} 的 frames 与 animations 推导结果不一致")
+            frames = derived
+            asset["animations"] = normalized
+
         for frame in frames:
             if not isinstance(frame, str) or not FRAME_RE.match(frame) or ".." in frame:
                 raise ConfigError(f"素材 {asset_id} 的帧名不合法：{frame!r}")
@@ -250,6 +273,7 @@ def resolve_size(asset, project, presets, frame_count=1, style=None):
     merged.setdefault("anchor", "center")
     merged.setdefault("trim", True)
     merged.setdefault("transparent", True)
+    merged.setdefault("baseline", True)
     merged.setdefault("gap", 0)
     merged.setdefault("seamless", False)
     # 整块纹理（背景/平铺）的纯色填充是内容，不是背景，默认不去底

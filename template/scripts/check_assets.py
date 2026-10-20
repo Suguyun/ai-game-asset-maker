@@ -169,7 +169,7 @@ def check_asset(root, project, style, asset, presets):
                 if left < padding - 1 or top < padding - 1 or im.width - right < padding - 1 or im.height - bottom < padding - 1:
                     add(checks, "ERROR", "icon_margin", f"{asset['id']} 主体超出安全边距 padding={padding}")
 
-    if size["type"] in ("character", "sprite") and len(one_x) > 1:
+    if size.get("baseline", True) and size["type"] in ("character", "sprite") and len(one_x) > 1:
         baselines = []
         bboxes = []
         for frame, im in one_x.items():
