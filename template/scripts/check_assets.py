@@ -189,6 +189,10 @@ def check_asset(root, project, style, asset, presets):
                 add(checks, "ERROR", "atlas_size", f"{asset['id']} 图集尺寸 {image.size} != 元数据 {meta.get('image_size')}")
             if len(meta.get("frames", [])) != len(frames):
                 add(checks, "ERROR", "atlas_frames", f"{asset['id']} 图集帧数 {len(meta.get('frames', []))} != {len(frames)}")
+            names = [frame.get("name") for frame in meta.get("frames", []) if isinstance(frame, dict)]
+            expected_names = [frame for frame in frames if frame]
+            if names != expected_names:
+                add(checks, "ERROR", "atlas_names", f"{asset['id']} 图集帧名 {names} != {expected_names}")
             if list(meta.get("cell", [])) != [frame_w, frame_h]:
                 add(checks, "ERROR", "atlas_cell", f"{asset['id']} 图集单元格 {meta.get('cell')} != {[frame_w, frame_h]}")
 

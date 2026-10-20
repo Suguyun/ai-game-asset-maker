@@ -180,6 +180,9 @@ def main():
     atlas = json.loads((dest / "assets/atlas/knight.json").read_text(encoding="utf-8"))
     assert len(atlas["frames"]) == 2, atlas
     assert atlas["cell"] == [64, 64], atlas
+    assert atlas["frames"][0] == {"index": 0, "name": "idle", "x": 0, "y": 0, "w": 64, "h": 64}, atlas
+    assert atlas["frames"][1]["x"] == 64 and atlas["frames"][1]["name"] == "walk", atlas
+    assert atlas["frame_names"] == ["idle", "walk"], atlas
 
     report = json.loads((project / "out/check_report.json").read_text(encoding="utf-8"))
     assert report["summary"]["ERROR"] == 0, report

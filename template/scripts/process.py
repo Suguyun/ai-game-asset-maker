@@ -233,7 +233,7 @@ def process_asset(root, project, style, asset, presets):
             "id": asset["id"],
             "name": size["name"],
             "type": size["type"],
-            "frames": frames,
+            "frame_names": [f for f in frames if f],
             "source_frame_size": [body_w, body_h],
         })
         meta_path = out_dir / f"{asset['id']}.json"
