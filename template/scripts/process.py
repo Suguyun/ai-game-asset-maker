@@ -13,7 +13,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 import numpy as np
-from PIL import Image
+from PIL import Image, ImageOps
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import atlas as atlas_lib  # noqa: E402
@@ -177,7 +177,7 @@ def process_asset(root, project, style, asset, presets):
         raw = find_raw(root, size, frame)
         if not raw:
             raise FileNotFoundError(f"缺原始图 {common.raw_path(root, size, frame)}")
-        original = Image.open(raw).convert("RGBA")
+        original = ImageOps.exif_transpose(Image.open(raw)).convert("RGBA")
         im = original
 
         if size.get("transparent", True) and size.get("removeBg", True):

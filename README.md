@@ -43,7 +43,7 @@
 - Python 3.9+
 - [ImageMagick](https://imagemagick.org/)（渲染 SVG 代码绘制素材）
 - Playwright + chromium（可选，渲染 HTML/Canvas 代码绘制素材）
-- Node.js 不是必需的；只有安装 Skill 或使用 Playwright 时才需要
+- Node.js 不是必需的；只有用 `npx` 安装 Skill 时才需要
 
 ```bash
 git clone <本仓库地址> ai-game-asset-maker
