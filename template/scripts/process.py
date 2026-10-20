@@ -142,13 +142,6 @@ def palette_delta(im, palette, sample=20000):
     return float(np.sqrt(distances.min(axis=1)).mean())
 
 
-def scaled(im, factor, nearest):
-    if factor == 1:
-        return im.copy()
-    resample = Image.NEAREST if nearest else Image.LANCZOS
-    return im.resize((im.width * factor, im.height * factor), resample)
-
-
 def find_raw(root, size, frame):
     base = common.raw_path(root, size, frame)
     candidates = [base]
@@ -191,24 +184,34 @@ def process_asset(root, project, style, asset, presets):
             im = remove_solid_bg(im)
         if size.get("trim", True):
             im = trim_alpha(im, 0)
-        im = fit_canvas(
-            im, body_w, body_h,
-            padding=int(size.get("padding", 0)),
-            anchor=size.get("anchor", "center"),
-            nearest=pixel,
-            cover=not size.get("transparent", True),
-        )
-        if palette:
-            report["palette_delta"] = max(report["palette_delta"], palette_delta(im, palette))
-            im = quantize_to_palette(im, palette)
 
+        # 每个倍率都直接从原始图重采样，避免「先缩到 1x 再放大」损失细节
+        padding = int(size.get("padding", 0))
+        anchor = size.get("anchor", "center")
+        cover = not size.get("transparent", True)
+        base = None
+        base_scale = None
         for scale in size["scales"]:
+            canvas = fit_canvas(
+                im, body_w * scale, body_h * scale,
+                padding=padding * scale,
+                anchor=anchor,
+                nearest=pixel,
+                cover=cover,
+            )
+            if palette:
+                report["palette_delta"] = max(report["palette_delta"], palette_delta(canvas, palette))
+                canvas = quantize_to_palette(canvas, palette)
             out = common.output_path(root, size, frame, scale)
             common.ensure_dir(out.parent)
-            scaled(im, scale, pixel).save(out)
+            canvas.save(out)
             report["outputs"].append(str(out.relative_to(common.project_root(root))))
+            if base_scale is None or scale < base_scale:
+                resample = Image.NEAREST if pixel else Image.LANCZOS
+                base = canvas.copy() if scale == 1 else canvas.resize((body_w, body_h), resample)
+                base_scale = scale
 
-        base_frames.append(im)
+        base_frames.append(base)
         report["frames"].append({
             "frame": frame,
             "raw": str(raw.relative_to(common.project_root(root))),
