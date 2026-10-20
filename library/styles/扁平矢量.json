@@ -1,0 +1,39 @@
+{
+  "name": "扁平矢量",
+  "keywords": [
+    "flat vector illustration",
+    "geometric shapes",
+    "bold silhouette",
+    "no gradients",
+    "modern mobile game",
+    "clean icon design"
+  ],
+  "palette": [
+    "#1D3557",
+    "#457B9D",
+    "#A8DADC",
+    "#F1FAEE",
+    "#E63946",
+    "#F4A261",
+    "#2A9D8F",
+    "#E9C46A",
+    "#6D597A",
+    "#B56576"
+  ],
+  "line": "no outline or uniform 2px outline, sharp corners",
+  "lighting": "flat color, one hard shadow shape, no gradients",
+  "material": "solid color fills only",
+  "referenceImages": [],
+  "avoid": [
+    "gradients",
+    "texture",
+    "3d render",
+    "photo realism",
+    "text",
+    "watermark",
+    "thin sketchy lines"
+  ],
+  "pixelGrid": 0,
+  "paletteLock": true,
+  "background": "transparent"
+}

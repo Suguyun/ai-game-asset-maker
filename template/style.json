@@ -1,0 +1,45 @@
+{
+  "name": "示例风格",
+  "keywords": [
+    "16-bit pixel art",
+    "crisp integer pixels",
+    "limited palette",
+    "retro adventure game",
+    "readable silhouette"
+  ],
+  "palette": [
+    "#1A1C2C",
+    "#5D275D",
+    "#B13E53",
+    "#EF7D57",
+    "#FFCD75",
+    "#A7F070",
+    "#38B764",
+    "#257179",
+    "#29366F",
+    "#3B5DC9",
+    "#41A6F6",
+    "#73EFF7",
+    "#F4F4F4",
+    "#94B0C2",
+    "#566C86",
+    "#333C57"
+  ],
+  "line": "1px dark outline, no anti-aliasing, integer pixel edges",
+  "lighting": "top-left key light, hard-edged shadow, no soft gradients",
+  "material": "flat color blocks with 2-3 tone shading",
+  "referenceImages": [],
+  "avoid": [
+    "3d render",
+    "blurry",
+    "photo texture",
+    "text",
+    "watermark",
+    "anti-aliasing",
+    "soft gradient",
+    "high detail"
+  ],
+  "pixelGrid": 16,
+  "paletteLock": true,
+  "background": "transparent"
+}

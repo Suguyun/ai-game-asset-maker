@@ -1,0 +1,40 @@
+{
+  "name": "写实厚涂",
+  "keywords": [
+    "realistic painterly",
+    "thick brush strokes",
+    "AAA game concept art",
+    "dramatic lighting",
+    "high material detail"
+  ],
+  "palette": [
+    "#12100E",
+    "#2B2622",
+    "#4A3F35",
+    "#6E5B4A",
+    "#9A7B5F",
+    "#C4A484",
+    "#E0C9A6",
+    "#7A2E2E",
+    "#B5482F",
+    "#3E5C5A",
+    "#7FA6A1",
+    "#EDE6DA"
+  ],
+  "line": "no outline, form defined by brushwork and value",
+  "lighting": "cinematic three-point light, strong specular highlights",
+  "material": "skin, cloth, steel, leather, stone with visible brush texture",
+  "referenceImages": [],
+  "avoid": [
+    "flat vector",
+    "pixel art",
+    "cartoon proportions",
+    "text",
+    "watermark",
+    "low detail",
+    "plastic toy look"
+  ],
+  "pixelGrid": 0,
+  "paletteLock": false,
+  "background": "transparent"
+}

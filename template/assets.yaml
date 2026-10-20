@@ -1,0 +1,7 @@
+assets:
+  - id: sample_icon
+    type: icon
+    name: 示例图标
+    mode: code-draw
+    size: { preset: icon, width: 128, height: 128, scales: [1, 2] }
+    notes: "一枚发光药水瓶，透明背景"

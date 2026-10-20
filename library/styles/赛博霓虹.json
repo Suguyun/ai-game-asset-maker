@@ -1,0 +1,41 @@
+{
+  "name": "赛博霓虹",
+  "keywords": [
+    "cyberpunk",
+    "neon rim light",
+    "dark navy background",
+    "holographic accents",
+    "hard surface design",
+    "high contrast"
+  ],
+  "palette": [
+    "#050814",
+    "#0B1020",
+    "#1B2A4A",
+    "#33477A",
+    "#29E0FF",
+    "#00B3C8",
+    "#FF4D8D",
+    "#FF9DE2",
+    "#F2F5FF",
+    "#8A94B8",
+    "#FFC857",
+    "#6CFF8F"
+  ],
+  "line": "1-2px crisp edge, neon emissive outline allowed",
+  "lighting": "cool ambient with cyan and magenta rim lights, hard shadows",
+  "material": "matte metal, glass, emissive strips, holographic panels",
+  "referenceImages": [],
+  "avoid": [
+    "warm daylight",
+    "natural organic shapes",
+    "paper texture",
+    "text",
+    "watermark",
+    "low contrast",
+    "medieval fantasy"
+  ],
+  "pixelGrid": 0,
+  "paletteLock": false,
+  "background": "transparent"
+}
